@@ -1,7 +1,9 @@
+import sys
 from datetime import datetime
 
 import spotipy
 import spotipy.util as util
+from spotipy import SpotifyException
 from spotipy.oauth2 import SpotifyClientCredentials
 from termcolor import colored
 
@@ -16,59 +18,63 @@ def get_IDs(playlist):
                                                           client_secret=constants.client_secret)
     sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
 
-    ids = []
+    spotifyIds = []
     for i, track in enumerate(playlist):
-        print(track + "* " + str(i))
+        try:
+            identifier = find_id(sp, track)
+            spotifyIds.append(identifier)
+        except SpotifyException as e:
+            print('Error when searching on spotify: ' + str(e))
 
-        # Titles are truncated after brackets because this is a major
-        # source of title mismatch during Spotify search.
-        # Brackets at beginning of title are not truncated.
-        if track.split(" - ")[1][1] == "(":
-            q = track.split("(")[0] + "(" + track.split("(")[1]
-        else:
-            q = track.split("(")[0]
+    print("%d track IDs of %d found" % (len(spotifyIds), len(playlist)))
+    print("")
+    return spotifyIds
 
-        results = sp.search(q=q, limit=7)
 
-        if len(results['tracks']['items']) == 0:
-            print(colored("Song not found.", "red"))
+def find_id(sp, track):
+    print(track)
+    # Titles are truncated after brackets because this is a major
+    # source of title mismatch during Spotify search.
+    # Brackets at beginning of title are not truncated.
+    if track.split(" - ")[1][1] == "(":
+        q = track.split("(")[0] + "(" + track.split("(")[1]
+    else:
+        q = track.split("(")[0]
+    results = sp.search(q=q, limit=7)
+    if len(results['tracks']['items']) == 0:
+        print(colored("Song not found.", "red"))
+    for t in results['tracks']['items']:
+        artists = [artist["name"].lower() for artist in t["artists"]]
 
-        for t in results['tracks']['items']:
-            artists = [artist["name"].lower() for artist in t["artists"]]
+        # Check 3: Release year in the present? Important for live LPs or Best Ofs
+        if date_check(t):
+            # Check 1: matching artists
+            if trailing_space(track.split(" - ")[0].lower()) in artists:
 
-            # Check 3: Release year in the present? Important for live LPs or Best Ofs
-            if date_check(t):
-                # Check 1: matching artists
-                if trailing_space(track.split(" - ")[0].lower()) in artists:
+                sp_title = t["name"].split(" - ")[0].lower()
+                pt_title = track.split(" - ")[1].lower()
 
-                    sp_title = t["name"].split(" - ")[0].lower()
-                    pt_title = track.split(" - ")[1].lower()
-
-                    # Check 2: matching title
-                    # Potentially error-prone if same track exists as solo AND collaboration:
-                    # In this case feat. artists are ignored and might return the wrong version
-                    # However, Date-Check might correct for this behaviour in many cases.
-                    if sp_title in pt_title:
-                        if len(artists) == 1:
-                            print("%s - %s" % (artists[0], t["name"],))
-                        else:
-                            print("%s - %s (feat. %s)" % (artists[0], t["name"], artists[1],))
-
-                        ids.append(t["id"])
-                        break
-
+                # Check 2: matching title
+                # Potentially error-prone if same track exists as solo AND collaboration:
+                # In this case feat. artists are ignored and might return the wrong version
+                # However, Date-Check might correct for this behaviour in many cases.
+                if sp_title in pt_title:
+                    if len(artists) == 1:
+                        print("%s - %s" % (artists[0], t["name"],))
                     else:
-                        print(colored("Title missmatch: '%s'" % sp_title, "yellow"))
+                        print("%s - %s (feat. %s)" % (artists[0], t["name"], artists[1],))
+
+                    return t["id"]
+                    break
 
                 else:
-                    print(colored("Artist missmatch: '%s'" % artists, "yellow"))
-                    continue
-            else:  # Check 3 Date check
-                continue
+                    print(colored("Title missmatch: '%s'" % sp_title, "yellow"))
 
-    print("%d track IDs of %d found" % (len(ids), len(playlist)))
-    print("")
-    return ids
+            else:
+                print(colored("Artist missmatch: '%s'" % artists, "yellow"))
+                continue
+        else:  # Check 3 Date check
+            continue
 
 
 def create_playlist(playlist_name):
