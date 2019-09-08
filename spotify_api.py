@@ -22,7 +22,8 @@ def get_IDs(playlist):
     for i, track in enumerate(playlist):
         try:
             identifier = find_id(sp, track)
-            spotifyIds.append(identifier)
+            if identifier is not None:
+                spotifyIds.append(identifier)
         except SpotifyException as e:
             print('Error when searching on spotify: ' + str(e))
 
