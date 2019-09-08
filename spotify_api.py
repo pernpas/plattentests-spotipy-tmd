@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional, Any
 
 import spotipy
 import spotipy.util as util
@@ -10,14 +9,14 @@ import constants
 from tools import trailing_space
 
 
-def get_ids(playlist):
+def get_IDs(playlist):
     print("Searching spotify for tracks ...")
 
     client_credentials_manager = SpotifyClientCredentials(client_id=constants.client_id,
                                                           client_secret=constants.client_secret)
     sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
 
-    id_s = []
+    IDs = []
     for i, track in enumerate(playlist):
         print(track + "* " + str(i))
 
@@ -25,7 +24,7 @@ def get_ids(playlist):
         # source of title mismatch during Spotify search.
         # Brackets at beginning of title are not truncated.
         if track.split(" - ")[1][1] == ("("):
-            q = track.split("(")[0] + "(" + track.split("(")[1]
+            q = track.split("(")[0]+"("+track.split("(")[1]
         else:
             q = track.split("(")[0]
 
@@ -38,9 +37,9 @@ def get_ids(playlist):
             artists = [artist["name"].lower() for artist in t["artists"]]
 
             # Check 3: Release year in the present? Important for live LPs or Best Ofs
-            if date_check(t):
+            if date_check(t) == True:
                 # Check 1: matching artists
-                if trailing_space(track.split(" - ")[0].lower()) in artists:
+                if trailing_space(track.split(" - ")[0].lower()) in artists:  
 
                     sp_title = t["name"].split(" - ")[0].lower()
                     pt_title = track.split(" - ")[1].lower()
@@ -49,13 +48,13 @@ def get_ids(playlist):
                     # Potentially error-prone if same track exists as solo AND collaboration:
                     # In this case feat. artists are ignored and might return the wrong version
                     # However, Date-Check might correct for this behaviour in many cases.   
-                    if sp_title in pt_title:
+                    if sp_title in pt_title:  
                         if len(artists) == 1:
                             print("%s - %s" % (artists[0], t["name"],))
                         else:
                             print("%s - %s (feat. %s)" % (artists[0], t["name"], artists[1],))
-
-                        id_s.append(t["id"])
+                    
+                        IDs.append(t["id"])
                         break
 
                     else:
@@ -67,15 +66,16 @@ def get_ids(playlist):
             else:  # Check 3 Date check
                 continue
 
-    print("%d track IDs of %d found" % (len(id_s), len(playlist)))
+
+    print("%d track IDs of %d found" % (len(IDs), len(playlist)))
     print("")
-    return id_s
+    return IDs
 
 
 def create_playlist(playlist_name):
-    """Creates a new playlist for a user"""
+    '''Creates a new playlist for a user'''
     username = constants.username
-    scope = 'user-follow-modify playlist-modify'
+    scope = constants.scope
     client_id = constants.client_id
     client_secret = constants.client_secret
     redirect_uri = constants.redirect_uri
@@ -85,25 +85,25 @@ def create_playlist(playlist_name):
     if token:
         sp = spotipy.Spotify(auth=token)
         sp.trace = False
-        playlists: Optional[Any] = sp.user_playlist_create(username, playlist_name)
+        playlists = sp.user_playlist_create(username, playlist_name, False)
 
     else:
         print("Can't get token for", username)
-
+        
     playlist_id = playlists["id"]
     print("")
     return playlist_id
 
 
 def add_tracks_to_playlist(playlist_id, track_ids):
-    """Add tracks to spotify playlist"""
+    '''Add tracks to spotify playlist'''
 
     print("Adding tracks to playlist %s on spotify." % playlist_id)
 
-    username = constants.username  # placeholder value here
-    scope = 'user-follow-modify playlist-modify'
-    client_id = constants.client_id  # placeholder value here
-    client_secret = constants.client_secret  # placeholder value here
+    username = constants.username #placeholder value here
+    scope = constants.scope
+    client_id = constants.client_id #placeholder value here
+    client_secret = constants.client_secret #placeholder value here
     redirect_uri = constants.redirect_uri
 
     token = util.prompt_for_user_token(username, scope, client_id, client_secret, redirect_uri=redirect_uri)
@@ -119,14 +119,14 @@ def add_tracks_to_playlist(playlist_id, track_ids):
 
 
 def update_playlist(playlist_id, track_ids):
-    """replace all tracks of a spotify playlist"""
+    '''replace all tracks of a spotify playlist'''
 
     print("Updating playlist %s on spotify." % playlist_id)
 
-    username = constants.username  # placeholder value here
+    username = constants.username #placeholder value here
     scope = constants.scope
-    client_id = constants.client_id  # placeholder value here
-    client_secret = constants.client_secret  # placeholder value here
+    client_id = constants.client_id #placeholder value here
+    client_secret = constants.client_secret #placeholder value here
     redirect_uri = constants.redirect_uri
 
     token = util.prompt_for_user_token(username, scope, client_id, client_secret, redirect_uri=redirect_uri)
@@ -151,7 +151,7 @@ def date_check(track):
     if release.year == now.year:
         return True
 
-    else:
+    else: 
         print(colored("Check 3 - old release %d" % release.year, "yellow"))
         return False
 
@@ -167,4 +167,4 @@ def read_playlist(playlist_id, username):
     ids = [item["track"]["id"] for item in results["tracks"]["items"]]
     print(f"{len(ids)} IDs found in '{results['name']}'")
 
-    return ids
+    return(ids)
