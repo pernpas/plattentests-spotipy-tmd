@@ -39,7 +39,7 @@ def get_IDs(playlist):
             # Check 3: Release year in the present? Important for live LPs or Best Ofs
             if date_check(t) == True:
                 # Check 1: matching artists
-                if trailing_space(track.split(" - ")[0].lower()) in artists:  
+                if trailing_space(track.split(" - ")[0].lower()) in artists:
 
                     sp_title = t["name"].split(" - ")[0].lower()
                     pt_title = track.split(" - ")[1].lower()
@@ -47,13 +47,13 @@ def get_IDs(playlist):
                     # Check 2: matching title
                     # Potentially error-prone if same track exists as solo AND collaboration:
                     # In this case feat. artists are ignored and might return the wrong version
-                    # However, Date-Check might correct for this behaviour in many cases.   
-                    if sp_title in pt_title:  
+                    # However, Date-Check might correct for this behaviour in many cases.
+                    if sp_title in pt_title:
                         if len(artists) == 1:
                             print("%s - %s" % (artists[0], t["name"],))
                         else:
                             print("%s - %s (feat. %s)" % (artists[0], t["name"], artists[1],))
-                    
+
                         IDs.append(t["id"])
                         break
 
@@ -89,7 +89,7 @@ def create_playlist(playlist_name):
 
     else:
         print("Can't get token for", username)
-        
+
     playlist_id = playlists["id"]
     print("")
     return playlist_id
@@ -148,10 +148,10 @@ def date_check(track):
 
     # Check if track was released in current year.
     # May be modified for January reviews.
-    if release.year == now.year:
+    if release.year == now.year or release.year == now.year-1:
         return True
 
-    else: 
+    else:
         print(colored("Check 3 - old release %d" % release.year, "yellow"))
         return False
 
