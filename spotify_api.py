@@ -152,9 +152,7 @@ def date_check(track):
     release = datetime.strptime(release_raw.split("-")[0], "%Y")
     now = datetime.now()
 
-    # Check if track was released in current year.
-    # May be modified for January reviews.
-    if release.year == now.year:
+    if release.year == now.year or release.year == now.year-1:
         return True
 
     else:

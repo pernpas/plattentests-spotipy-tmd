@@ -6,16 +6,16 @@ import pprint as pp
 import constants
 from PlattentestsApi import PlattentestsApi
 from spotify_api import get_IDs, create_playlist, add_tracks_to_playlist, update_playlist, read_playlist
-from tools import update_adw, get_weekly_filename_and_ID, add_to_playlist_archive, get_names, sortTrackHighlights
+from tools import is_new_album_of_the_week, get_weekly_filename_and_id, add_to_playlist_archive, get_names, sort_track_highlights
 
-major_update = update_adw()
+major_update = is_new_album_of_the_week()
 
 if major_update:
     print("Running major update...")
     # Parse plattentests.de and create playlist
     trackHighlights = PlattentestsApi.getHighlightsFromLatestReview()
     scoreValues = PlattentestsApi.getAlbumScoreValues()
-    playlist = sortTrackHighlights(trackHighlights, scoreValues)
+    playlist = sort_track_highlights(trackHighlights, scoreValues)
     pp.pprint(playlist)
 
     # Save playlist
@@ -43,7 +43,7 @@ if major_update:
 else:
     # Load current playlist
     print("Running minor update...")
-    filename, weekly_id = get_weekly_filename_and_ID()
+    filename, weekly_id = get_weekly_filename_and_id()
     pickle_off = open(filename, "rb")
     playlist = pickle.load(pickle_off)
     print("Playlist '%s' loaded." % filename)
