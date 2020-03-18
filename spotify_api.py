@@ -41,7 +41,7 @@ def find_id(sp, track):
         q = track.split("(")[0] + "(" + track.split("(")[1]
     else:
         q = track.split("(")[0]
-    results = sp.search(q=q, limit=7)
+    results = sp.search(q=q, limit=7, market="DE")
     if len(results['tracks']['items']) == 0:
         print(colored("Song not found.", "red"))
     for t in results['tracks']['items']:
