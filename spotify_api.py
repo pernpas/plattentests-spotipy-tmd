@@ -1,3 +1,4 @@
+
 import sys
 from datetime import datetime
 
@@ -21,7 +22,11 @@ def get_IDs(playlist):
     spotifyIds = []
     for i, track in enumerate(playlist):
         try:
-            identifier = find_id(sp, track)
+            try:
+                identifier = find_id(sp, track)
+            except:
+                print("Error occured in find_id")
+                identifier = None
             if identifier is not None:
                 spotifyIds.append(identifier)
         except SpotifyException as e:
